@@ -55,12 +55,19 @@ function resizeCanvas(initial = false) {
 
 //dragging logic
 
+
 function getPointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    
     if (e.touches && e.touches.length > 0) {
-        const rect = canvas.getBoundingClientRect();
         return {
             x: e.touches[0].clientX - rect.left,
             y: e.touches[0].clientY - rect.top
+        };
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        return {
+            x: e.changedTouches[0].clientX - rect.left,
+            y: e.changedTouches[0].clientY - rect.top
         };
     } else {
         return {
@@ -70,6 +77,7 @@ function getPointerPos(e) {
     }
 }
 let draggingNode = null;
+
 
 
 function isMouseInNode(x,y, node){
@@ -172,7 +180,6 @@ canvas.addEventListener('mouseup', e => {
         }
     }
     if(draggingNode.isInTree){
-        drawAllNodes(allNodes);
          let temp = allNodes[0];
         let swapIndex = allNodes.indexOf(draggingNode);
         allNodes[0] = draggingNode;
@@ -194,7 +201,6 @@ canvas.addEventListener('mouseup', e => {
         
         targetNode.tree.insert(draggingNode);
     }
-        drawAllNodes(allNodes);
         let temp = allNodes[0];
         let swapIndex = allNodes.indexOf(draggingNode);
         allNodes[0] = draggingNode;
@@ -202,20 +208,227 @@ canvas.addEventListener('mouseup', e => {
         draggingNode = null;
 });
 
+//used cursor to add touch capabilities 
+// Convert touch event to canvas coordinates
+
+let draggingNodeTouch = null; // Add missing variable for touch dragging
+let lastTapTime = 0; // Track last tap time for double-tap detection
+let lastTappedNode = null; // Track last tapped node
+function getTouchPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    
+    // Handle different touch event types for better Safari compatibility
+    if (e.touches && e.touches.length > 0) {
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        return {
+            x: e.changedTouches[0].clientX - rect.left,
+            y: e.changedTouches[0].clientY - rect.top
+        };
+    } else if (e.targetTouches && e.targetTouches.length > 0) {
+        return {
+            x: e.targetTouches[0].clientX - rect.left,
+            y: e.targetTouches[0].clientY - rect.top
+        };
+    }
+    
+    // Fallback
+    return { x: 0, y: 0 };
+}
+
+// Check if a point is inside a node
+function isTouchInNode(x, y, node) {
+    return Math.sqrt((x - node.x) ** 2 + (y - node.y) ** 2) < node.radius;
+}
+
+// Handle touch start
+function handlePointerDown(x, y) {
+       for (let node of allNodes) {
+        if (isTouchInNode(x, y, node)) {
+          
+            draggingNodeTouch = node;
+            
+            // Check for double-tap (right-click equivalent)
+            const currentTime = new Date().getTime();
+            if (currentTime - lastTapTime < 300 && lastTappedNode === node) {
+                // Double-tap detected - handle as right-click
+                handleTouchRightClick(node);
+                lastTapTime = 0; // Reset to prevent multiple triggers
+                lastTappedNode = null;
+                return;
+            }
+            
+            // Update tap tracking
+            lastTapTime = currentTime;
+            lastTappedNode = node;
+            
+            // Handle root node dragging (same as mouse)
+            if (draggingNodeTouch.isRoot) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                layOutTree(draggingNodeTouch);
+            }
+            
+            // Move the node to the end of the array to draw on top
+            const idx = allNodes.indexOf(node);
+            const temp = allNodes[allNodes.length - 1];
+            allNodes[allNodes.length - 1] = node;
+            allNodes[idx] = temp;
+            break;
+        }
+    }
+}
+
+// Handle touch move
+function handlePointerMove(x, y) {
+    if (!draggingNodeTouch) return;
+    draggingNodeTouch.x = x;
+    draggingNodeTouch.y = y;
+
+    // If it's a root, optionally lay out the tree
+    if (draggingNodeTouch.isRoot) {
+        layOutTree(draggingNodeTouch);
+    }
+}
+
+// Handle touch end
+function handlePointerUp() {
+    if (!draggingNodeTouch) return;
+
+    let targetNode = null;
+
+    for (let node of allNodes) {
+        if (node === draggingNodeTouch) continue;
+        const dx = draggingNodeTouch.x - node.x;
+        const dy = draggingNodeTouch.y - node.y;
+        const rTotal = node.radius + draggingNodeTouch.radius;
+        if (Math.sqrt(dx * dx + dy * dy) < rTotal) {
+            targetNode = node;
+            break;
+        }
+    }
+
+    if (draggingNodeTouch.isInTree) {
+        drawAllNodes(allNodes);
+        // Move node back to beginning of array
+        let temp = allNodes[0];
+        let swapIndex = allNodes.indexOf(draggingNodeTouch);
+        allNodes[0] = draggingNodeTouch;
+        allNodes[swapIndex] = temp;
+        draggingNodeTouch = null;
+        return;
+    }
+
+    if (targetNode) {
+        if (!targetNode.isInTree) {
+            const newTree = new BinarySearchTree();
+            newTree.root = targetNode;
+            targetNode.isInTree = true;
+            targetNode.isRoot = true;
+            targetNode.parent = null;
+            targetNode.tree = newTree;
+        }
+        targetNode.tree.insert(draggingNodeTouch);
+    }
+
+    drawAllNodes(allNodes);
+    // Move node back to beginning of array
+    let temp = allNodes[0];
+    let swapIndex = allNodes.indexOf(draggingNodeTouch);
+    allNodes[0] = draggingNodeTouch;
+    allNodes[swapIndex] = temp;
+    draggingNodeTouch = null;
+}
+// Handle touch right-click equivalent (double-tap)
+function handleTouchRightClick(node) {
+    console.log('Touch right-click on node:', node.value);
+    
+    if (node.isRoot) {
+        if (!node.leftChild && !node.rightChild) {
+            node.isInTree = false;
+            node.tree = null;
+            node.isRoot = false;
+        }
+    } else if (node.isInTree && node.tree) {
+        node.tree.remove(node);
+    }
+    
+    // Redraw after removal
+    drawAllNodes(allNodes);
+}
+
+// Attach touch events with improved Safari support
 canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    canvas.dispatchEvent(new MouseEvent('mousedown', e));
-});
+    e.stopPropagation();
+    const pos = getTouchPos(e);
+    handlePointerDown(pos.x, pos.y);
+}, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
     e.preventDefault();
-    canvas.dispatchEvent(new MouseEvent('mousemove', e));
-});
+    e.stopPropagation();
+    const pos = getTouchPos(e);
+    handlePointerMove(pos.x, pos.y);
+}, { passive: false });
 
 canvas.addEventListener('touchend', e => {
     e.preventDefault();
-    canvas.dispatchEvent(new MouseEvent('mouseup', e));
+    e.stopPropagation();
+    handlePointerUp();
+}, { passive: false });
+
+// Add touchcancel event for better mobile support
+canvas.addEventListener('touchcancel', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    draggingNodeTouch = null;
+}, { passive: false });
+
+// Add pointer events as fallback for better cross-device compatibility
+canvas.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') {
+        e.preventDefault();
+        const pos = getPointerPos(e);
+        handlePointerDown(pos.x, pos.y);
+    }
 });
+
+canvas.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch' && draggingNodeTouch) {
+        e.preventDefault();
+        const pos = getPointerPos(e);
+        handlePointerMove(pos.x, pos.y);
+    }
+});
+
+canvas.addEventListener('pointerup', e => {
+    if (e.pointerType === 'touch') {
+        e.preventDefault();
+        handlePointerUp();
+    }
+});
+
+// Safari-specific touch handling improvements
+if ('ontouchstart' in window) {
+    // Disable double-tap zoom on Safari
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+    
+    // Prevent scrolling when touching the canvas
+    canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+}
+// ^^ end of the ai stuff^^
 
 //buttons logic
 document.getElementById("createbtn").onclick = function() {CreateNode()};
@@ -319,6 +532,7 @@ function drawNode(node){
     ctx.textBaseLine = "middle";
     ctx.fillText(`${node.value}`, node.x, node.y + 4);
 }
+
 function drawAllNodes(nodes){
 
    drawInstructionsOnCanvas();
@@ -363,25 +577,17 @@ function drawInstructionsOnCanvas() {
 }
 
 function update() {
-    // Clear and redraw the entire canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    
     drawInstructionsOnCanvas();
-    // Draw edges
+    
     for (let node of allNodes) {
         drawEdges(node);
     }
-
-    // Draw instructions (faint text under nodes)
-    
-
-    // Draw nodes
     for (let node of allNodes) {
         drawNode(node);
     }
 
-    // Schedule next frame
     requestAnimationFrame(update);
 }
 

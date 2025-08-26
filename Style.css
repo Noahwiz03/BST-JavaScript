@@ -17,12 +17,23 @@ body {
   z-index: 1; 
   position: relative; 
   touch-action: none;
+
+  /* added by cursor */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* added by cursor*/
 }
 
 #ControlHeader {
   border: 1px solid white;
   margin: 10px;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /*stole this from the internet*/
   text-shadow: -1px -1px 0 #000122, 1px -1px 0 #000122,
           -1px 1px 0 #000122, 1px 1px 0 #000122; color: white;;
     background-image: url("assets/Header.PNG");
