@@ -189,6 +189,9 @@ function CreateNode(){
     let newNodeValue = document.getElementById("nodeValue").value;
     if(newNodeValue != ''){
         newNodeValue = parseInt(newNodeValue);
+        if(isNaN(newNodeValue)){
+            return;
+        }
     }else{ return;}
     let x = Math.random(0,1) * canvas.width;
     let y = Math.random(0,1) * canvas.height;
