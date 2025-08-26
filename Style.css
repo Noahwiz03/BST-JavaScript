@@ -16,6 +16,7 @@ body {
   background-color: #000122; 
   z-index: 1; 
   position: relative; 
+  touch-action: none;
 }
 
 #ControlHeader {

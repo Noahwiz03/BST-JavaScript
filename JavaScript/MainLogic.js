@@ -38,7 +38,7 @@ function resizeCanvas(initial = false) {
         }
     }
 
-    drawAllNodes(allNodes);
+   // drawAllNodes(allNodes);
 }
 
 
@@ -98,7 +98,7 @@ for(let node of allNodes){
         let swapIndex = allNodes.indexOf(draggingNode);
         allNodes[allNodes.length-1] = draggingNode;
         allNodes[swapIndex] = temp;
-        drawAllNodes(allNodes);
+       // drawAllNodes(allNodes);
         break;
     }
  }
@@ -129,7 +129,7 @@ if(e.button == 2){
         allNodes[allNodes.length-1] = draggingNode;
         allNodes[swapIndex] = temp;
         draggingNode.tree.remove(draggingNode);
-        drawAllNodes(allNodes);
+       // drawAllNodes(allNodes);
         break;
     }
  }
@@ -147,13 +147,14 @@ canvas.addEventListener('mousemove', e => {
     if(draggingNode.isRoot){  
      layOutTree(draggingNode);
     }
-    drawAllNodes(allNodes);
+   // drawAllNodes(allNodes);
 });
 
 //found on stackedOverFlow https://stackoverflow.com/questions/10864249/how-to-disable-the-right-click-context-menu-on-an-html-canvas
 canvas.oncontextmenu = function (e) {
     e.preventDefault();
 };
+
 canvas.addEventListener('mouseup', e => {
     let targetNode = null;
     if(!draggingNode){return;}
@@ -230,7 +231,7 @@ function CreateNode(){
     let y = Math.random(0,1) * canvas.height;
     // console.log(x, y);
     allNodes.push(new Node(newNodeValue,x,y));
-    drawAllNodes(allNodes);
+   // drawAllNodes(allNodes);
    document.getElementById("nodeValue").value = "";
 }
 
@@ -238,7 +239,7 @@ document.getElementById("resetbtn").onclick = function() {ResetScene()};
 function ResetScene(){
     allNodes.length = 0;
   //  allTrees.length = 0;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+   // ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
 
@@ -319,6 +320,8 @@ function drawNode(node){
     ctx.fillText(`${node.value}`, node.x, node.y + 4);
 }
 function drawAllNodes(nodes){
+
+   drawInstructionsOnCanvas();
     for(var node of nodes){
       drawEdges(node);
     }
@@ -326,3 +329,60 @@ function drawAllNodes(nodes){
       drawNode(node);
     }
 }
+
+
+function drawInstructionsOnCanvas() {
+    const instructions = [
+        "Action       Mouse/Button             Behavior",
+        "Create Node  Button                   Spawns a new node with the entered value",
+        "Drag Node    Left Click + Move        Moves a node around the canvas",
+        "Insert Node  Drag Node onto another   Node is inserted into that tree",
+        "Remove Node  Right Click on node      Removes the node from its tree",
+        "Reset        Button                   Clears all nodes from canvas"
+    ];
+
+    ctx.save();
+
+    // Responsive font size: 2% of canvas height, min 12px, max 20px
+    const fontSize = Math.max(12, Math.min(20, canvas.height * 0.02));
+    ctx.font = `${fontSize}px monospace`;
+
+    // Faint, semi-transparent text
+    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.textAlign = "left";
+
+    const paddingX = canvas.width * 0.02; // 2% from left
+    const paddingY = canvas.height * 0.10; // 5% from top
+    const lineHeight = fontSize * 1.5;
+
+    for (let i = 0; i < instructions.length; i++) {
+        ctx.fillText(instructions[i], paddingX, paddingY + i * lineHeight);
+    }
+
+    ctx.restore();
+}
+
+function update() {
+    // Clear and redraw the entire canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    
+    drawInstructionsOnCanvas();
+    // Draw edges
+    for (let node of allNodes) {
+        drawEdges(node);
+    }
+
+    // Draw instructions (faint text under nodes)
+    
+
+    // Draw nodes
+    for (let node of allNodes) {
+        drawNode(node);
+    }
+
+    // Schedule next frame
+    requestAnimationFrame(update);
+}
+
+update();
