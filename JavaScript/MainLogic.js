@@ -1,13 +1,56 @@
 //imports
 import {Node} from './Node.js';
 import {BinarySearchTree} from './TreeManager.js';
+const widthMult = 0.999;
+const heightMult = 0.92;
 const canvas = document.getElementById("canvas");
-canvas.width= window.innerWidth * 0.98;
-canvas.height = window.innerHeight * 0.91;
+canvas.width= window.innerWidth * widthMult;
+canvas.height = window.innerHeight * heightMult;
 const ctx = canvas.getContext("2d");
 
 const allNodes = []; //stores all nodes
 //const allTrees = []; //stores all trees
+
+
+
+// making the canvas rezise to the size of the window
+resizeCanvas(true);
+window.addEventListener("resize", () => resizeCanvas(false));
+
+function resizeCanvas(initial = false) {
+    const oldWidth = canvas.width || 1;
+    const oldHeight = canvas.height || 1;
+
+    const newWidth = Math.floor(window.innerWidth * widthMult);
+    const newHeight = Math.floor(window.innerHeight * heightMult);
+
+    const scaleX = newWidth / oldWidth;
+    const scaleY = newHeight / oldHeight;
+
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+
+    // Scale nodes if not first run
+    if (!initial && oldWidth > 1 && oldHeight > 1) {
+        for (let node of allNodes) {
+            node.x *= scaleX;
+            node.y *= scaleY;
+        }
+    }
+
+    drawAllNodes(allNodes);
+}
+
+
+
+//dropdown button
+  // Click-to-toggle dropdown
+  const dropdownContainer = document.querySelector('.dropdown-container');
+  const dropdownBtn = document.getElementById('dropdownBtn');
+
+  dropdownBtn.addEventListener('click', () => {
+    dropdownContainer.classList.toggle('active');
+  });
 
 
 //dragging logic
@@ -152,7 +195,7 @@ function CreateNode(){
     // console.log(x, y);
     allNodes.push(new Node(newNodeValue,x,y));
     drawAllNodes(allNodes);
-   
+   document.getElementById("nodeValue").value = "";
 }
 
 document.getElementById("resetbtn").onclick = function() {ResetScene()};

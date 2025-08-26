@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BstPlayground</title>
-    <link rel="stylesheet" href="Style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BstPlayground</title>
+  <link rel="stylesheet" href="Style.css">
 </head>
 <body>
-    <div id="controls">
-        <div id="ControlHeader">
-            <h1>Make some Trees!</h1>
-        </div>
-        <input id="nodeValue" placeholder="Enter Node Value">
-        <button id="createbtn">Create</button>
-        <button id="resetbtn">Reset</button>
+  <div id="ControlHeader">
+    <h1>Make some Trees!</h1>
+  </div>
+
+  <div class="canvas-container">
+  <canvas id="canvas"></canvas>
+
+  <div class="dropdown-container">
+    <button class="dropbtn" id="dropdownBtn">Options ▼</button>
+    <div class="dropdown-content" id="dropdownMenu">
+      <input id="nodeValue" placeholder="Value" autocomplete="off">
+      <button id="createbtn">Create</button>
+      <button id="resetbtn">Reset</button>
+     
     </div>
+  </div>
+</div>
 
-    <canvas id="canvas"></canvas>
-
-
-
-    <script type="module" src="./JavaScript/MainLogic.js"></script>
+  <script type="module" src="./JavaScript/MainLogic.js"></script>
 </body>
 </html>
