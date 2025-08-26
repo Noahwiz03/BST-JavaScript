@@ -54,6 +54,21 @@ function resizeCanvas(initial = false) {
 
 
 //dragging logic
+
+function getPointerPos(e) {
+    if (e.touches && e.touches.length > 0) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    } else {
+        return {
+            x: e.offsetX,
+            y: e.offsetY
+        };
+    }
+}
 let draggingNode = null;
 
 
@@ -68,8 +83,9 @@ function isMouseInNode(x,y, node){
 canvas.addEventListener('mousedown', e => {
 e.preventDefault();
 if(e.button == 0){
-let startX = parseInt(e.offsetX);
-let startY = parseInt(e.offsetY);
+const {x, y} = getPointerPos(e);
+let startX = parseInt(x);
+let startY = parseInt(y);
 
 for(let node of allNodes){
     if(isMouseInNode(startX,startY, node)){
@@ -90,8 +106,9 @@ for(let node of allNodes){
 }
 
 if(e.button == 2){
-    let startX = parseInt(e.offsetX);
-    let startY = parseInt(e.offsetY);
+    const {x, y} = getPointerPos(e);
+    let startX = parseInt(x);
+    let startY = parseInt(y);
 
     for(let node of allNodes){
     if(isMouseInNode(startX,startY, node)){
@@ -123,8 +140,9 @@ if(e.button == 2){
 
 canvas.addEventListener('mousemove', e => {
    if(!draggingNode){return;}
-    draggingNode.x = e.offsetX;
-    draggingNode.y = e.offsetY;
+   const {x, y} = getPointerPos(e);
+    draggingNode.x = parseInt(x);
+    draggingNode.y = parseInt(y);
     ctx.clearRect(0,0, canvas.width, canvas.height);
     if(draggingNode.isRoot){  
      layOutTree(draggingNode);
@@ -172,7 +190,7 @@ canvas.addEventListener('mouseup', e => {
             targetNode.tree = newTree;
   //          allTrees.push(newTree);
         }
-
+        
         targetNode.tree.insert(draggingNode);
     }
         drawAllNodes(allNodes);
@@ -181,6 +199,21 @@ canvas.addEventListener('mouseup', e => {
         allNodes[0] = draggingNode;
         allNodes[swapIndex] = temp;
         draggingNode = null;
+});
+
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    canvas.dispatchEvent(new MouseEvent('mousedown', e));
+});
+
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    canvas.dispatchEvent(new MouseEvent('mousemove', e));
+});
+
+canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    canvas.dispatchEvent(new MouseEvent('mouseup', e));
 });
 
 //buttons logic
