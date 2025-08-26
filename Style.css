@@ -22,6 +22,8 @@ body {
   border: 1px solid white;
   margin: 10px;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-shadow: -1px -1px 0 #000122, 1px -1px 0 #000122,
+          -1px 1px 0 #000122, 1px 1px 0 #000122; color: white;;
     background-image: url("assets/Header.PNG");
     background-repeat: no-repeat;
     background-position: center;
